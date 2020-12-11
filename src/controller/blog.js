@@ -16,16 +16,15 @@ const getList = (author, keyword) => {
 }
 
 const getDetail = (id) => {
-    return {
-        id: 1,
-        title: '标题a',
-        content:'内容a',
-        createTime: Date.now(),
-        author: 'ningzheng'
-    }
+    const sql = `select * from blogs where id='${id}'`
+    return exec(sql).then(rows => {
+        return rows[0]
+    })
 }
 
 const newBlog = (blogData = {}) => {
+    // blog包含title,content,author属性
+    const { title, content, author } = blogData
     return {
         id: 1
     }

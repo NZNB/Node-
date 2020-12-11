@@ -19,8 +19,9 @@ const handleBlogRouter = (req, res) => {
     // 博客详情
     if (method === 'GET' && pathname === '/api/blog/detail') {
         const { id } = req.query
-        const data = getDetail(id)
-        return new SuccessModel(data)
+        return getDetail(id).then(res => {
+            return new SuccessModel(res)
+        })
     }
 
     // 新建博客
@@ -32,7 +33,7 @@ const handleBlogRouter = (req, res) => {
 
     // 更新博客
     if (method === 'POST' && pathname === '/api/blog/update') {
-        
+
         const result = updateBlog(id, req.body)
         if (result) {
             return new SuccessModel(result)
