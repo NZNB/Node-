@@ -26,9 +26,13 @@ const handleBlogRouter = (req, res) => {
 
     // 新建博客
     if (method === 'POST' && pathname === '/api/blog/new') {
-        const blogData = req.body
-        const data = newBlog(req.body)
-        return new SuccessModel(data)
+        console.log('req.body :>> ', req.body);
+        const { author = 'ning' } = req.query
+        req.body.author = author
+        const result = newBlog(req.body)
+        return result.then(res => {
+            return new SuccessModel(res)
+        })
     }
 
     // 更新博客
