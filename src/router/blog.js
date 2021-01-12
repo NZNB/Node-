@@ -5,7 +5,6 @@ const handleBlogRouter = (req, res) => {
     const method = req.method // GET POST
     let { pathname, query } = url.parse(req.url, true)
     const id = query.id || ''
-    console.log('pathname :>> ', pathname);
     // 获取博客列表
     if (method === 'GET' && pathname === '/api/blog/list') {
         const { author = '', keyword = '' } = req.query
@@ -26,7 +25,6 @@ const handleBlogRouter = (req, res) => {
 
     // 新建博客
     if (method === 'POST' && pathname === '/api/blog/new') {
-        console.log('req.body :>> ', req.body);
         const { author = 'ning' } = req.query
         req.body.author = author
         const result = newBlog(req.body)
@@ -37,22 +35,29 @@ const handleBlogRouter = (req, res) => {
 
     // 更新博客
     if (method === 'POST' && pathname === '/api/blog/update') {
-
         const result = updateBlog(id, req.body)
-        if (result) {
-            return new SuccessModel(result)
-        } else {
-            return new ErrorModel('更新失败')
-        }
+        return result.then(res => {
+            if (res) {
+                return new SuccessModel(res)
+            } else {
+                return new ErrorModel('更新失败')
+            }
+        })
+
     }
     // 删除博客
     if (method === 'POST' && pathname === '/api/blog/del') {
-        const result = delBlog(id)
-        if (result) {
-            return new SuccessModel()
-        } else {
-            return new ErrorModel('删除失败')
-        }
+        const result = delBlog(id, req.body)
+        console.log('result :>> ', result);
+        return result.then(res => {
+            console.log('res :>> ', res);
+            if (res) {
+                return new SuccessModel(res)
+            } else {
+                return new ErrorModel('删除失败')
+            }
+        })
+        
     }
 }
 

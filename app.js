@@ -1,7 +1,13 @@
 const handleUserRouter = require('./src/router/user')
 const handleBlogRouter = require('./src/router/blog')
 const url = require('url')
-
+function getCookieExpires() {
+    const d = new Date()
+    d.setTime(d.getTime() + 365 * 24 * 3600 * 1000)
+    return d.toUTCString()
+}
+// session数据
+let SESSION_DATA = {}
 // 处理post data
 const getPostData = (req) => {
     const promise = new Promise((resolve, reject) => {
@@ -38,13 +44,37 @@ const serverHandle = (req, res) => {
     req.path = pathname
     req.query = query
 
+    // 解析cookie
+    req.cookie = {}
+    const cookieStr = req.headers.cookie || ''
+    cookieStr.split(';').forEach(item => {
+        if (!item) return
+        let [key, value] = item.split('=')
+        req.cookie[key.trim()] = value
+    })
+     // 解析session
+    let isSetCookie = false
+    let { userId } = req.cookie
+    if (userId) {
+        const sessionUserId = SESSION_DATA[userId]
+        if (!sessionUserId) {
+            SESSION_DATA[userId] = {}
+        }
+    } else {
+        userId = Date.now() + '_' + Math.random()
+        SESSION_DATA[userId] = {}
+        isSetCookie = true
+    }
+    req.session = SESSION_DATA[userId]
     getPostData(req).then(postData => {
         req.body = postData
         // 处理blog路由
         const blogResult = handleBlogRouter(req, res)
         if (blogResult) {
             blogResult.then(blogData => {
-                console.log('blogData :>> ', blogData);
+                if (isSetCookie) {
+                    res.setHeader('Set-Cookie', `userId=${userId}; path:/; httpOnly; expires=${getCookieExpires()}`)
+                }
                 res.end(JSON.stringify(blogData))
             })
             return
@@ -54,7 +84,12 @@ const serverHandle = (req, res) => {
         const userData = handleUserRouter(req, res)
         console.log('userData :>> ', userData);
         if (userData) {
-            res.end(JSON.stringify(userData))
+            userData.then(userData => {
+                if (isSetCookie) {
+                    res.setHeader('Set-Cookie', `userId=${userId}; path:/; httpOnly; expires=${getCookieExpires()}`)
+                }
+                res.end(JSON.stringify(userData))
+            })
             return
         }
         // 未命中返回404
@@ -65,9 +100,3 @@ const serverHandle = (req, res) => {
     })
 }
 module.exports = serverHandle
-
-// const resData = {
-//     name: 'ningzheng',
-//     age: 27,
-//     env: process.env.NODE_ENV
-// }

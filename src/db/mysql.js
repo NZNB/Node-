@@ -1,4 +1,3 @@
-const { result } = require('lodash')
 const mysql = require('mysql')
 const { MYSQL_CONF } = require('../config/db')
 
